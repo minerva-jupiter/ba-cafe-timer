@@ -1,33 +1,54 @@
 "use client";
 
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, authProvider } from "@/lib/firebase";
-import { useState } from "react";
-import { saveTapHistory } from "@/lib/handleTap";
+import { useEffect, useState } from "react";
+import { saveTapHistory, testNotification } from "@/lib/handleTap";
+import OneSignal from "react-onesignal";
 
 export default function Home() {
   const [isSignedIn, setIsSignedIn] = useState(false);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setIsSignedIn(true);
+        const userId = user.uid;
+
+        try {
+          await OneSignal.init({
+            appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
+          });
+
+          await OneSignal.login(userId);
+          console.log("OneSignal login successful");
+        } catch (error) {
+          console.error("OneSignal operation failed:", error);
+        }
+      } else {
+        setIsSignedIn(false);
+        console.log("User is signed out");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   function Signin() {
     const handleSignIn = async () => {
       try {
         await signInWithPopup(auth, authProvider);
+        console.log("Sign-in popup successful");
       } catch (error) {
         console.error("Error signing in:", error);
-        return;
       }
-      setIsSignedIn(true);
-      console.log("Signed in");
     };
     const handleSignOut = async () => {
       try {
         await signOut(auth);
+        console.log("Signed out");
       } catch (error) {
         console.error("Error signing out:", error);
-        return;
       }
-      setIsSignedIn(false);
-      console.log("Signed out");
     };
     if (isSignedIn == false) {
       return <button onClick={handleSignIn}>Sign in with Google</button>;
@@ -43,6 +64,7 @@ export default function Home() {
       {Signin()}
 
       <button onClick={() => saveTapHistory("normal")}>Save Tap History</button>
+      <button onClick={() => testNotification()}>Schedule Notification</button>
     </main>
   );
 }
