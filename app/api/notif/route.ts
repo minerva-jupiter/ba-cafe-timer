@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { TapKind } from "@/lib/handleTap";
 
 export async function POST(request: Request) {
   try {
