@@ -3,7 +3,7 @@
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, authProvider } from "@/lib/firebase";
 import { useEffect, useState } from "react";
-import { handleTap, saveTapHistory, testNotification } from "@/lib/handleTap";
+import { handleTap } from "@/lib/handleTap";
 import OneSignal from "react-onesignal";
 
 export default function Home() {
