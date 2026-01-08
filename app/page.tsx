@@ -63,7 +63,9 @@ export default function Home() {
       </h1>
       {Signin()}
 
-      <button onClick={() => handleTap("normal")}>Save Tap History</button>
+      <button onClick={() => handleTap("normal")}>cafe Taped</button>
+      <button onClick={() => handleTap("ticket1")}>Use Ticket1</button>
+      <button onClick={() => handleTap("ticket2")}>Use Ticket2</button>
     </main>
   );
 }
