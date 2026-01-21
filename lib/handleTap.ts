@@ -13,17 +13,12 @@ export async function saveTapHistory(tapKind: TapKind) {
   if (!user) throw new Error("User not authenticated");
   const userDocRef = doc(db, "users", user.uid);
 
-  const tapEntry = {
-    tappedAt: new Date().toISOString(),
-    status: "scheduled",
-  };
-
   try {
     await setDoc(
       userDocRef,
       {
         history: {
-          [tapKind]: arrayUnion(tapEntry),
+          [tapKind]: arrayUnion(new Date(Date.now()).toISOString()),
         },
       },
       { merge: true },
@@ -34,15 +29,15 @@ export async function saveTapHistory(tapKind: TapKind) {
   }
 }
 
-export async function testNotification() {
+export async function notification(tapKind: TapKind, time: string) {
   const response = await fetch("api/notif", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      tapKind: "normal",
-      time: new Date(Date.now() + 30 * 1000).toISOString(),
+      tapKind: tapKind,
+      time: time,
       userId: auth.currentUser?.uid,
     }),
   });
