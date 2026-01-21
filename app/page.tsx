@@ -2,14 +2,20 @@
 
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, authProvider } from "@/lib/firebase";
-import { useEffect, useState } from "react";
-import { saveTapHistory, testNotification } from "@/lib/handleTap";
+import { useState } from "react";
+import { handleTap } from "@/lib/handleTap";
 import OneSignal from "react-onesignal";
 
 export default function Home() {
   const [isSignedIn, setIsSignedIn] = useState(false);
-
-  useEffect(() => {
+  function subscribe() {
+    if (OneSignal.User) {
+      return <button onClick={toggleSubscribe}>Subscribe</button>;
+    } else {
+      return <button onClick={toggleSubscribe}>Subscribe</button>;
+    }
+  }
+  function toggleSubscribe() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setIsSignedIn(true);
@@ -32,7 +38,7 @@ export default function Home() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }
   function Signin() {
     const handleSignIn = async () => {
       try {
@@ -62,9 +68,9 @@ export default function Home() {
         Café Timer
       </h1>
       {Signin()}
+      {subscribe()}
 
-      <button onClick={() => saveTapHistory("normal")}>Save Tap History</button>
-      <button onClick={() => testNotification()}>Schedule Notification</button>
+      <button onClick={() => handleTap("normal")}>Save Tap History</button>
     </main>
   );
 }
