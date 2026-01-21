@@ -1,10 +1,13 @@
-export const runtime = 'edge';
+export const runtime = "edge";
 
 import { NextResponse } from "next/server";
+import { notifMessages } from "@/lib/presets";
+import { TapKind } from "@/lib/handleTap";
 
 export async function POST(request: Request) {
   try {
     const { tapKind, time, userId } = await request.json();
+    console.log(tapKind, time, userId);
     if (
       !tapKind ||
       !time ||
@@ -17,6 +20,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    const tapKindParsed: TapKind = tapKind;
     const response = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
       headers: {
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
         app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
         include_external_user_ids: [userId],
         contents: {
-          en: `You have a ${tapKind} scheduled for ${time}`,
+          en: notifMessages[tapKindParsed],
         },
         send_after: time,
       }),

@@ -70,7 +70,10 @@ export default function Home() {
       {Signin()}
       {subscribe()}
 
-      <button onClick={() => handleTap("normal")}>Save Tap History</button>
+      <button onClick={() => handleTap("normal")}>Taped !!!</button>
+
+      <button onClick={() => handleTap("ticket1")}>Ticket 1</button>
+      <button onClick={() => handleTap("ticket2")}>Ticket 2</button>
     </main>
   );
 }

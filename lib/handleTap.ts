@@ -44,11 +44,7 @@ export async function notification(tapKind: TapKind, time: string) {
   console.log(await response.json());
 }
 
-const settedTime: Record<TapKind, number> = {
-  normal: 3 * 60 * 1000,
-  ticket1: 22 * 60 * 60 * 1000,
-  ticket2: 22 * 60 * 1000,
-};
+import { settedTime } from "@/lib/presets";
 
 export async function scheduleNotification(tapKind: TapKind) {
   const response = await fetch("api/notif", {
@@ -57,7 +53,7 @@ export async function scheduleNotification(tapKind: TapKind) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      tapKind,
+      tapKind: tapKind,
       time: new Date(Date.now() + settedTime[tapKind]).toISOString(),
       userId: auth.currentUser?.uid,
     }),
