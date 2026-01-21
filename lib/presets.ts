@@ -7,7 +7,7 @@ export const notifMessages: Record<TapKind, string> = {
 };
 
 export const settedTime: Record<TapKind, number> = {
-  normal: 3 * 60 * 1000,
+  normal: 3 * 60 * 60 * 1000,
   ticket1: 22 * 60 * 60 * 1000,
   ticket2: 22 * 60 * 1000,
 };
