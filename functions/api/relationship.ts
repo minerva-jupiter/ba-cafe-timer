@@ -15,29 +15,35 @@ interface Env {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
 }
 
-export async function onRequestOptions({ request, env }: EventContext<Env, any, any>): Promise<Response> {
+export async function onRequestOptions({ request }: EventContext<Env, any, any>): Promise<Response> {
+  const origin = request.headers.get('Origin');
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*', // Adjust as needed, 'https://rabbit1.cc' was in original
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
     },
   });
 }
 
+const corsHeaders = (request: Request) => ({
+  'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+  'Content-Type': 'application/json',
+});
+
 export async function onRequestGet({ request, env }: EventContext<Env, any, any>): Promise<Response> {
   try {
-    const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No token' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'No token' }), { status: 401, headers: corsHeaders(request) });
     }
 
     const supabase = getSupabaseClient(env, authHeader);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders(request) });
     }
 
     const { data: relationships, error } = await supabase
@@ -48,10 +54,10 @@ export async function onRequestGet({ request, env }: EventContext<Env, any, any>
 
     if (error) throw error;
 
-    return new Response(JSON.stringify(relationships || []), { headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(relationships || []), { headers: corsHeaders(request) });
   } catch (error: any) {
     console.error("GET API Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders(request) });
   }
 }
 
@@ -100,10 +106,10 @@ export async function onRequestPost({ request, env }: EventContext<Env, any, any
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders(request) });
   } catch (error: any) {
     console.error("POST API Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders(request) });
   }
 }
 
@@ -132,9 +138,9 @@ export async function onRequestDelete({ request, env }: EventContext<Env, any, a
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders(request) });
   } catch (error: any) {
     console.error("DELETE API Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders(request) });
   }
 }

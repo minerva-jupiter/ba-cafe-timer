@@ -87,16 +87,23 @@ const shouldScheduleNotification = (tapTime: Date): boolean => {
 };
 
 // Cloudflare Pages Function Handlers
-export async function onRequestOptions({ request, env }: EventContext<Env, any, any>): Promise<Response> {
+export async function onRequestOptions({ request }: EventContext<Env, any, any>): Promise<Response> {
+  const origin = request.headers.get('Origin');
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*', // Adjust as needed, 'https://rabbit1.cc' was in original
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
     },
   });
 }
+
+const corsHeaders = (request: Request) => ({
+  'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+  'Content-Type': 'application/json',
+});
 
 export async function onRequestPost({ request, env }: EventContext<Env, any, any>): Promise<Response> {
   try {
@@ -105,14 +112,14 @@ export async function onRequestPost({ request, env }: EventContext<Env, any, any
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No token' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'No token' }), { status: 401, headers: corsHeaders(request) });
     }
 
     const supabase = getSupabaseClient(env, authHeader);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders(request) });
     }
 
     const now = new Date();
@@ -162,7 +169,8 @@ export async function onRequestPost({ request, env }: EventContext<Env, any, any
       upsertData.ticket2_time = d2 ? d2.toISOString() : null;
     }
 
-    await supabase.from('profiles').upsert(upsertData);
+    const { error: profileError } = await supabase.from('profiles').upsert(upsertData);
+    if (profileError) throw profileError;
 
     // 3. 通知予約処理
     if (tapTime && shouldScheduleNotification(new Date(tapTime))) {
@@ -172,7 +180,7 @@ export async function onRequestPost({ request, env }: EventContext<Env, any, any
 
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
       
-      await fetch("https://onesignal.com/api/v1/notifications", {
+      const oneSignalRes = await fetch("https://onesignal.com/api/v1/notifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,12 +195,19 @@ export async function onRequestPost({ request, env }: EventContext<Env, any, any
           send_after: sendAfter.toISOString(), 
         })
       });
+
+      if (!oneSignalRes.ok) {
+        const errorText = await oneSignalRes.text();
+        console.error("OneSignal Error:", errorText);
+        // We don't necessarily want to fail the whole request if notification fails, 
+        // but it's good to know.
+      }
     }
 
-    return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders(request) });
 
   } catch (error: any) {
     console.error("API Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders(request) });
   }
 }
