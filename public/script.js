@@ -7,9 +7,9 @@
 // These should ideally be set via your build process or a config file.
 // For now, they are placeholders you'll need to fill.
 const CONFIG = {
-    SUPABASE_URL: '', // Add your Supabase URL
-    SUPABASE_ANON_KEY: '', // Add your Supabase Anon Key
-    ONESIGNAL_APP_ID: '', // Add your OneSignal App ID
+    SUPABASE_URL: 'https://nzantxodqsdyxmtbaqik.supabase.co', // Add your Supabase URL
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56YW50eG9kcXNkeXhtdGJhcWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzMxNDQsImV4cCI6MjEwMTUwOTE0NH0.L0sJCQOKYH_KpkPz6cNz2xg20cVNmhncS-5WKnprkJs', // Add your Supabase Anon Key
+    ONESIGNAL_APP_ID: '049fc06c-108f-4836-8c2d-9c07ecbfd7fd', // Add your OneSignal App ID
 };
 
 // --- Application State ---
@@ -50,9 +50,9 @@ const api = {
         try {
             const res = await fetch('/api/relationship', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${state.session.access_token}` 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.session.access_token}`
                 },
                 body: JSON.stringify({ char_key: charKey, bond_level: level, recorded_at: date })
             });
@@ -66,8 +66,8 @@ const api = {
             await this.fetchRelationshipHistory();
         } catch (e) {
             console.error('Save Relationship Error:', e);
-        } finally { 
-            state.isSyncing = false; 
+        } finally {
+            state.isSyncing = false;
             updateUI();
         }
     },
@@ -79,9 +79,9 @@ const api = {
         try {
             const res = await fetch('/api/tap', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${state.session.access_token}` 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.session.access_token}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -113,7 +113,7 @@ const components = {
                     <button id="tap-button" class="btn-timer w-full py-8 rounded-3xl bg-primary text-primary-foreground font-black text-2xl shadow-xl active:scale-95 transition-all ${state.isSyncing ? 'opacity-50 pointer-events-none' : ''}">
                         TAP TO RECORD
                     </button>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
                         <button id="invite-1" class="p-4 rounded-2xl border bg-card hover:bg-muted transition-colors text-sm font-bold">
                             INVITE #1<br><span class="text-xs opacity-50 font-normal">${state.ticket1Time ? new Date(state.ticket1Time).toLocaleTimeString() : 'Ready'}</span>
@@ -133,7 +133,7 @@ const components = {
         const diff = now - lastTap;
         const threeHours = 3 * 60 * 60 * 1000;
         if (diff >= threeHours) return "READY";
-        
+
         const remaining = threeHours - diff;
         const h = Math.floor(remaining / 3600000);
         const m = Math.floor((remaining % 3600000) / 60000);
@@ -264,14 +264,14 @@ async function loadInitialData() {
             .select('ticket1_time, ticket2_time')
             .eq('id', state.session.user.id)
             .single();
-        
+
         if (profile) {
             state.ticket1Time = profile.ticket1_time ? new Date(profile.ticket1_time) : null;
             state.ticket2Time = profile.ticket2_time ? new Date(profile.ticket2_time) : null;
         }
 
         await api.fetchRelationshipHistory();
-        
+
         state.isDataLoaded = true;
         updateUI();
     } catch (e) {
@@ -298,9 +298,9 @@ function init() {
 
     // Static Event Listeners
     document.getElementById('discord-login').onclick = () => {
-        supabaseClient.auth.signInWithOAuth({ 
-            provider: 'discord', 
-            options: { redirectTo: window.location.origin } 
+        supabaseClient.auth.signInWithOAuth({
+            provider: 'discord',
+            options: { redirectTo: window.location.origin }
         });
     };
 
